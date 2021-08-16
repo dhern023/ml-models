@@ -2,7 +2,10 @@
 # coding: utf-8
 
 """
-Binary Perception algorithm from scratch
+A refactor of Binary Perception algorithm from 
+    Groken Machine Learning Chapter 5: 
+    Sentiment analysis with the perceptron algorithm
+    by Luis Serrano
 
 Can handle multi-dimensional features
 """
@@ -14,15 +17,14 @@ import tqdm
 
 # Helpers (Plotting) =========================================
 
-def plot_scatter(x_iterable, y_iterable, **kwargs):
+def plot_scatter(x_iterable, y_iterable, x_label = "", y_label = "",  legend = None, **kwargs):
     x_array = numpy.array(x_iterable)
     y_array = numpy.array(y_iterable)
+    plt.xlabel(x_label)
+    plt.xlabel(y_label)
+    if legend is not None:
+        plt.legend(legend)
     plt.scatter(x_array, y_array, **kwargs)
-
-    plt.xlabel(kwargs.get('x_label', ''))
-    plt.xlabel(kwargs.get('y_label', ''))
-    if kwargs.get('legend', None) is not None:
-        plt.legend(kwargs.get('legend', None))
 
 def plot_plane(normal, constant, **kwargs):
     """

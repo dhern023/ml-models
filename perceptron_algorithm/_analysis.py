@@ -6,7 +6,6 @@ Also useful for displaying all artifacts.
 """
 
 from _perceptron import (
-    Perceptron,
     # Will replace plot package
     plot_plane,
     plot_scatter,
@@ -16,13 +15,12 @@ import argparse
 from matplotlib import pyplot as plt
 import pandas
 import pathlib
+import statsmodels.api as sm
 
 parser = argparse.ArgumentParser(description='Train & analyze a perceptron model.')
 parser.add_argument('--data', help='fpath of the dataset')
 parser.add_argument('--label', help='The name of the label column')
 parser.add_argument('--covariates', nargs='+', help='Optional. Model covariates separate by space')
-parser.add_argument('--learning_rate', default=0.01, type=float, help='The learning rate')
-parser.add_argument('--max_iter', default=200, type=int, help='The maximum number of iterations')
 args = parser.parse_args()
 
 if __name__ == "__main__":
@@ -31,46 +29,39 @@ if __name__ == "__main__":
 
     # Building a model using given covariates
     exog = data.copy()
-    endog = exog.pop(args.label).values
+    exog = sm.add_constant(exog) # adds an intercept column
+    endog = exog.pop(args.label)
 
     # Uses all covaraites by default.
     if args.covariates:
-        statement_converged = "Perceptron converged: {} are linearly separable".format(args.covariates)
-        statement_diverged = "Perceptron converged: {} are linearly separable".format(args.covariates)
-        exog = exog[args.covariates].values
-
-    else:
-        statement_converged = "Perceptron converged: {} are linearly separable".format(exog.columns.tolist())
-        statement_diverged = "Perceptron converged: {} are linearly separable".format(exog.columns.tolist())
-        exog = exog.values
+        exog = exog[args.covariates]
 
     # Train Model
-    instance_perceptron = Perceptron()
-    weights, bias, errors = instance_perceptron.perceptron_algorithm(
-        exog,
-        endog,
-        args.learning_rate,
-        args.max_iter)
+    model_logistic_regression = sm.Logit(
+        endog = endog,
+        exog = exog)
+    model_logistic_regression.raise_on_perfect_prediction = False
+    results_regression = model_logistic_regression.fit()
 
     # Produce artifacts
-    if 0 in errors:        
-        print(statement_converged)
-    else:
-        print(statement_diverged)
+    print(results_regression.summary())
     
-    if weights.shape[0] == 2:
-        plot_scatter(exog[:,0], exog[:,1], c = endog)
+    if results_regression.params.shape[0] == 3:
+        plot_scatter(exog.iloc[:,1], exog.iloc[:,2], c = endog)
         draw_line(
-            -weights[0]/weights[1],
-            -bias/weights[1],
-            ending = sum(endog),
+            -results_regression.params[2]/results_regression.params[1],
+            -results_regression.params[0]/results_regression.params[1],
+            starting=0,
+            ending=sum(endog),
             color='grey', linewidth=1.0, linestyle='dotted')
         plt.legend(["Separating line"])
         plt.show()
 
-    elif weights.shape[0] == 3:
-        ax = plot_plane(weights, bias)
-        ax.scatter(exog[:,0], exog[:,1], exog[:,2], c = endog)
+    elif results_regression.params.shape[0] == 4:
+        ax = plot_plane(
+            results_regression.params[1:], 
+            results_regression.params[0])
+        ax.scatter(exog.iloc[:,1], exog.iloc[:,2], exog.iloc[:,3], c = endog)
         plt.show()
     
     else: # 4D plane or higher

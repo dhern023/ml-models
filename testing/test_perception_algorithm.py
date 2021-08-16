@@ -70,3 +70,22 @@ plt.show()
 
 
 # perceptron.coefficients
+
+import statsmodels.api as sm
+
+exog = sm.add_constant(features) # adds an intercept column
+model_logistic_regression = sm.Logit(
+    endog = labels, 
+    exog = exog)
+model_logistic_regression.raise_on_perfect_prediction = False
+results_regression = model_logistic_regression.fit()
+print(results_regression.summary())
+
+plot_scatter(data[labels == 0,0], data[labels == 0,1], marker = '^')
+plot_scatter(data[labels == 1,0], data[labels == 1,1], marker = 's')
+draw_line(
+    -results_regression.params[2]/results_regression.params[1],
+    -results_regression.params[0]/results_regression.params[1],
+    starting=0, 
+    ending=sum(labels))
+plt.show()
