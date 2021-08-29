@@ -3,12 +3,10 @@
 Preprocess data by adding a column with the (non-repeated)
 lowercase words in the email.
 
-TODO:
-    Log the dataframes to a text file to form some sort of summary.
-    
+TODO: Log the dataframes to a text file to form some sort of summary.
 """
 
-from _naive_bayes_classifier import *
+from _naive_bayes import NaiveBayes
 
 import argparse
 import pandas
@@ -57,23 +55,6 @@ if __name__ == "__main__":
     counts_label = emails[column_label].value_counts()
     print(counts_label) # log this)
 
-    # Calculating prior probabilities
-    dict_priors = calculate_frequency_average(emails[column_label])
-    print("Probability of spam:", dict_priors[label_spam])
-
-    # Calculate text word frequencies and train the model
-    dict_frequencies_whole_text = construct_frequency_dict_from_series(emails[column_text])
-    dict_model = calculate_labeled_frequencies(dict_frequencies_whole_text, emails, column_label, column_words)
-
-    # Some examples (1 is spam, and 0 is ham)
-    print(dict_model['lottery'])
-    print(dict_model['sale'])
-    print(dict_model['already'])
-
-    print(predict_bayes('lottery', label_spam, dict_model))
-    print(predict_bayes('sale', label_spam, dict_model))
-    print(predict_bayes('already', label_spam, dict_model))
-    
     list_emails = [
         "lottery sale",
         "Hi mom how are you",
@@ -81,19 +62,37 @@ if __name__ == "__main__":
         "meet me at the lobby of the hotel at nine am",
         "enter the lottery to win three million dollars",
         "buy cheap lottery easy money now",
-        "buy cheap lottery easy money"
+        "buy cheap lottery easy money",
         "Grokking Machine Learning by Luis Serrano",
         "asdfgh"]
+
+    instance_naive_bayes = NaiveBayes()
+    instance_naive_bayes.calculate_priors(emails[column_label])
+    instance_naive_bayes.calculate_frequencies_text(emails[column_text])
+    instance_naive_bayes.update_frequencies_text(list_emails)
+    # Calculate text word frequencies and train the model
+    instance_naive_bayes.calculate_labeled_frequencies(
+        emails, column_label, column_words)
+
+    # Calculating prior probabilities
+    print("Probability of spam:", instance_naive_bayes.dict_priors[label_spam])
+
+    # Some examples (1 is spam, and 0 is ham)
+    print(instance_naive_bayes.dict_model['lottery'])
+    print(instance_naive_bayes.dict_model['sale'])
+    print(instance_naive_bayes.dict_model['already'])
+
+    print(instance_naive_bayes.predict_bayes('lottery', label_spam))
+    print(instance_naive_bayes.predict_bayes('sale', label_spam))
+    print(instance_naive_bayes.predict_bayes('already', label_spam))
     
-    dict_frequencies_new_words = construct_frequency_dict_from_strings(list_emails)
-    dict_model = setup_naive_bayes(dict_frequencies_new_words, emails, column_label, column_words, column_text)
     cout = "Probability email is spam: "
     for email in list_emails:
-        print(cout, predict_naive_bayes(email, label_spam, dict_model, emails[column_label]))
+        print(cout, instance_naive_bayes.predict_naive_bayes(email, label_spam, emails[column_label]))
     
     # Do our results make sense?
     # If a classification is surprising, 
     # let's check how often a word like "serrano" appears in spam emails.
     
-    print(dict_model['serrano'])
-    print(predict_bayes('serrano', label_spam, dict_model))
+    print(instance_naive_bayes.dict_model['serrano'])
+    print(instance_naive_bayes.predict_bayes('serrano', label_spam))
