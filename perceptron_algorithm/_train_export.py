@@ -11,18 +11,18 @@ import d6tflow
 import pathlib
 import statsmodels.api as sm
 
-parser = argparse.ArgumentParser(description='Train & export a linear regression model.')
+parser = argparse.ArgumentParser(description='Train & export a perceptron model.')
 parser.add_argument('--data', help='fpath of the dataset')
 parser.add_argument('--labels', nargs='+', help='Label columns separate by space')
 parser.add_argument('--covariates', nargs='+', help='Optional. Model covariates separate by space')
-parser.add_argument('--out', default='ols_weights.pickle', help='fpath of the output. Always pickled')
+parser.add_argument('--out', default='logit_weights.pickle', help='fpath of the output. Always pickled')
 args = parser.parse_args()
 
 def main_statsmodels(args):
     params = {
         'fdata':args.data,
         'add_constant':True,
-        'convert_to_one_hot':True,
+        'convert_to_one_hot':False,
         'columns_label':args.labels,
         'columns_covariates':args.covariates
         }
@@ -44,10 +44,11 @@ if __name__ == "__main__":
     endog = data['labels']
 
     # Trains model as labeled item
-    model_linear_regression = sm.OLS(
+    model_logistic_regression = sm.Logit(
         endog = endog,
         exog = exog)
-    results_regression = model_linear_regression.fit()
+    model_logistic_regression.raise_on_perfect_prediction = False
+    results_regression = model_logistic_regression.fit()
 
     # Writes model to binary (pickle)
     results_regression.save(pathlib.Path(args.out))
