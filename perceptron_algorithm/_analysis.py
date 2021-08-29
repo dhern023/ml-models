@@ -4,7 +4,7 @@ Verifyies if two labels are linearly separable:
     aka, the perceptron algorithm converges
 Also useful for displaying all artifacts.
 """
-
+from tasks import _tasks_statsmodels
 from _perceptron import (
     # Will replace plot package
     plot_plane,
@@ -12,29 +12,40 @@ from _perceptron import (
     draw_line)
 
 import argparse
+import d6tflow
 from matplotlib import pyplot as plt
-import pandas
-import pathlib
 import statsmodels.api as sm
 
 parser = argparse.ArgumentParser(description='Train & analyze a perceptron model.')
 parser.add_argument('--data', help='fpath of the dataset')
-parser.add_argument('--label', help='The name of the label column')
+parser.add_argument('--labels', nargs='+', help='Label columns separate by space')
 parser.add_argument('--covariates', nargs='+', help='Optional. Model covariates separate by space')
 args = parser.parse_args()
 
+def main_statsmodels(args):
+    params = {
+        'fdata':args.data,
+        'add_constant':True,
+        'convert_to_one_hot':False,
+        'columns_label':args.labels,
+        'columns_covariates':args.covariates
+        }
+    flow = d6tflow.Workflow(
+        _tasks_statsmodels.TaskSetupExogEndogData,
+        params)
+    try:
+        flow.run()
+    except RuntimeError:
+        pass
+    return flow
+
 if __name__ == "__main__":
 
-    data = pandas.read_csv(pathlib.Path(args.data))
-
     # Building a model using given covariates
-    exog = data.copy()
-    exog = sm.add_constant(exog) # adds an intercept column
-    endog = exog.pop(args.label)
-
-    # Uses all covaraites by default.
-    if args.covariates:
-        exog = exog[args.covariates]
+    flow = main_statsmodels(args)
+    data = flow.outputLoad(as_dict=True)
+    exog = data['data']
+    endog = data['labels']
 
     # Train Model
     model_logistic_regression = sm.Logit(
@@ -45,7 +56,7 @@ if __name__ == "__main__":
 
     # Produce artifacts
     print(results_regression.summary())
-    
+
     if results_regression.params.shape[0] == 3:
         plot_scatter(exog.iloc[:,1], exog.iloc[:,2], c = endog)
         draw_line(
@@ -59,11 +70,11 @@ if __name__ == "__main__":
 
     elif results_regression.params.shape[0] == 4:
         ax = plot_plane(
-            results_regression.params[1:], 
+            results_regression.params[1:],
             results_regression.params[0])
         ax.scatter(exog.iloc[:,1], exog.iloc[:,2], exog.iloc[:,3], c = endog)
         plt.show()
-    
+
     else: # 4D plane or higher
         statement_dimensions = "Too many dimensions to plot"
         print(statement_dimensions)
