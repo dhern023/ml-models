@@ -12,7 +12,7 @@ import argparse
 import pandas
 import pathlib
 
-parser = argparse.ArgumentParser(description='Train & analyze a linear regression model.')
+parser = argparse.ArgumentParser(description='Train and play with a Naive Bayes model.')
 parser.add_argument('--data', help='fpath of the dataset')
 parser.add_argument('--label', help='The name of the label column')
 parser.add_argument('--covariates', nargs='+', help='Optional. Model covariates separate by space')
