@@ -3,35 +3,12 @@
 Tasks for building statsmodel pipelines
 """
 
+import _workflow
+
 import d6tflow
-import numpy
 import pandas
 import pathlib
 import statsmodels.api as sm
-
-def split_three_ways(array):
-    """
-    Does not perform statisfied sampling
-    Assumes shuffled
-    Splits into 3:1:1 ratio
-    """
-    percent_60 = int(.6*array.shape[0])
-    percent_80 = int(.8*array.shape[0])
-
-    train, validate, test = numpy.split(
-        array, [percent_60, percent_80])
-    return train, validate, test
-
-def split_two_ways(array, percentage = 0.2):
-    """
-    Assumes shuffled
-    Percentage must be between 0 and 1 (right inclusive)
-    """
-    assert 0 < percentage <= 1
-    
-    train, test = numpy.split(array, percentage)
-    
-    return train, test
 
 class TaskLoadDataframe(d6tflow.tasks.TaskCachePandas):
     """
@@ -97,16 +74,16 @@ class TaskSplitData(d6tflow.tasks.TaskCache):
         if self.split_three_ways:
             dict_datasets['train_data'],\
                 dict_datasets['valid_data'],\
-                    dict_datasets['eval_data'] = split_three_ways(array_data)
+                    dict_datasets['eval_data'] = _workflow.split_three_ways(array_data)
             dict_datasets['train_labels'],\
                 dict_datasets['valid_labels'],\
-                    dict_datasets['eval_labels'] = split_three_ways(array_labels)
+                    dict_datasets['eval_labels'] = _workflow.split_three_ways(array_labels)
 
         else: # split two ways
             dict_datasets['train_data'],\
-                dict_datasets['eval_data'] = split_two_ways(array_data, self.split_percentage)
+                dict_datasets['eval_data'] = _workflow.split_two_ways(array_data, self.split_percentage)
             dict_datasets['train_labels'],\
-                    dict_datasets['eval_labels'] = split_two_ways(array_labels, self.split_percentage)
+                    dict_datasets['eval_labels'] = _workflow.split_two_ways(array_labels, self.split_percentage)
 
         self.save(dict_datasets)
 
