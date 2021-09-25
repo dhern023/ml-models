@@ -2,7 +2,10 @@ d6tflow
 numpy
 matplotlib
 pandas
+pandas_flavor
 tqdm
+seaborn
+sklearn
 statsmodels
 Flask==1.1.2
 flask_restx==0.5.0
