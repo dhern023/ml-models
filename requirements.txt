@@ -3,10 +3,12 @@ numpy
 matplotlib
 pandas
 pandas_flavor
+pypi
+pyinstaller
 tqdm
 seaborn
-sklearn
+scikit_learn
 statsmodels
-Flask==1.1.2
-flask_restx==0.5.0
+Flask==2.0.1
+flask_restx==0.5.1
 https://github.com/pandas-profiling/pandas-profiling/archive/master.zip
